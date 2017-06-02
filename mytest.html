@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>Group</title>
+    <script type="text/javascript" src="./esl.js"></script>
+</head>
+
+<body>
+    <div id="main" style="width:600px;min-height:600px;margin:auto"></div>
+    <script type="text/javascript">
+        require.config({
+            packages: [{
+                name: 'zrender',
+                location: '/src',
+                main: 'zrender'
+            }]
+        });
+        require(
+            [
+                "zrender",
+                "zrender/animation/animation",
+                'zrender/shape/Rectangle',
+                'zrender/Group',
+                'zrender/shape/Line',
+                'zrender/shape/Text',
+                'zrender/shape/Polygon'
+            ],
+            function (zrender, Animation, RectangleShape, Group, LineShape, TextShape, PolygonShape) {
+
+
+
+
+                var view = function (setting) {
+
+                    var default_setting = {
+                        data: {
+                            "A": ["111"],
+                            "B": ["222", "333"],
+                            "C": ["444"],
+                            "D": ["555"],
+                            "E": ["666"],
+                            "F": ["777"],
+                            "G": ["888"]
+                        },
+                        direction: [{
+                            name: "A",
+                            data: [{
+                                name: "我是谁还",
+                                status: "new"
+                            }]
+                        }, {
+                            name: "B",
+                            data: [{
+                                    name: "222",
+                                    status: "success"
+                                },
+                                {
+                                    name: "333",
+                                    status: "opened"
+                                }
+                            ]
+                        }, {
+                            name: "C",
+                            data: [{
+                                name: "111",
+                                status: "success"
+                            }]
+                        }, {
+                            name: "D",
+                            data: [{
+                                name: "111",
+                                status: "success"
+                            }]
+                        }, {
+                            name: "E",
+                            data: [{
+                                name: "111",
+                                status: "success"
+                            }]
+                        }, {
+                            name: "F",
+                            data: [{
+                                name: "111",
+                                status: "finish"
+                            }]
+                        }, {
+                            name: "G",
+                            data: [{
+                                name: "111",
+                                status: "delete"
+                            }]
+                        }, {
+                            name: "A",
+                            data: [{
+                                name: "111",
+                                status: "success"
+                            }]
+                        }]
+                    };
+
+                    Object.assign(setting, default_setting);
+
+
+                    // 初始化zrender
+                    this.zr = zrender.init(document.getElementById(setting.id));
+                    this.height = this.zr.getHeight();
+                    this.width = this.zr.getWidth() - 150;
+
+                    //颜色单位设置
+                    this.statuses = {
+                        "new": "rgb(255,0,0)",
+                        "opened": "rgb(255,102,0)",
+                        "success": "rgb(0,255,0)",
+                        "finish": "rgb(0,0,255)",
+                        "pigeonhole": "rgb(255,0,255)",
+                        "delete": "rgb(102,102,102)"
+                    }
+
+                    Object.assign(this.statuses, setting.statuses);
+
+
+
+                    this.index = [];
+                    this.indexs = [];
+
+                    var that = this;
+
+
+
+
+                    this.methods = {
+
+                        //计算相应的位置
+                        caculate: function () {
+
+                            var tmpi = 0;
+                            var tmpy = 100;
+
+                            var total = Object.getOwnPropertyNames(setting.data).length;
+
+                            for (var i in setting.data) {
+                                that.indexs[i] = {
+                                    width: that.width * 1.0 / (total * 5 - 4),
+                                    height: that.width * 4 / (total * 5 - 4),
+                                    x: 5 * tmpi * (that.width * 1.0 / (total * 5 - 4)),
+                                    y: 0,
+                                    xStart: 5 * tmpi * (that.width * 1.0 / (total * 5 - 4)) + that.width *
+                                        0.5 / (total * 5 - 4),
+
+                                    length: setting.data[i].length
+                                };
+                                tmpi++;
+                            }
+
+                            for (var i = 0; i < setting.direction.length; i++) {
+                                for (var j = 0; j < that.indexs[setting.direction[i].name].length; j++) {
+                                    that.index.push({
+                                        width: that.indexs[setting.direction[i].name].width,
+                                        height: that.indexs[setting.direction[i].name].height,
+                                        x: that.indexs[setting.direction[i].name].x,
+                                        y: tmpy,
+                                        color: that.statuses[setting.direction[i].data[j].status],
+                                        text: setting.direction[i].data[j].name
+                                    });
+                                    tmpy += that.indexs[setting.direction[i].name].height;
+                                }
+                            }
+
+
+                        },
+
+
+                        // 创建相应的矩形对象模块
+                        rect: function (data) {
+                            /*{ 
+                                width:100,
+                                height:100,
+                                x:0,
+                                y:0,
+                                color:"red",
+                                text:"name" 
+                            }*/
+                            return new RectangleShape({
+                                style: {
+                                    x: data.x,
+                                    y: data.y,
+                                    width: data.width,
+                                    height: data.height,
+                                    radius: [0, 0],
+                                    brushType: 'both',
+                                    color: data.color,
+                                    strokeColor: data.color,
+                                    lineWidth: 0,
+                                    lineJoin: 'round',
+                                    text: data.text.split("").join("\n"), 
+                                    textPosition: "inside"
+                                },
+                                draggable: false
+                            });
+                        },
+
+                        markline: function (data) {
+
+
+                            // xStart: that.indexs[i].xStart,
+                            // yStart: 100,
+                            // xEnd: that.indexs[i].xStart,
+                            // yEnd: that.height,
+
+                            var tmpg = new Group();
+                            var tmplength = 10;
+
+                            tmpg.addChild(new LineShape({
+                                style: {
+                                    xStart: data.xStart,
+                                    yStart: data.yStart,
+                                    xEnd: data.xEnd,
+                                    yEnd: data.yEnd,
+                                    color: data.color,
+                                    lineWidth: 0.2,
+                                    lineType: 'solid'
+                                },
+                                draggable: false
+                            }));
+                            if (data.xEnd > data.xStart) {
+                                tmplength = -tmplength;
+                            }
+
+                            tmpg.addChild(new PolygonShape({
+                                style: {
+                                    pointList: [
+                                        [data.xEnd, data.yEnd],
+                                        [data.xEnd + tmplength, data.yEnd - tmplength /
+                                            3
+                                        ],
+                                        [data.xEnd + tmplength / 2, data.yEnd],
+                                        [data.xEnd + tmplength, data.yEnd + tmplength /
+                                            3
+                                        ]
+                                    ],
+                                    color: "red",
+                                    lineWidth: 0
+                                },
+                                draggable: false
+                            }));
+                            return tmpg;
+
+                        },
+                        legend: function () {
+                            var tmpg = new Group();
+                            var tmpy = 130;
+                            for (var i in that.statuses) {
+                                tmpg.addChild(new RectangleShape({
+                                    style: {
+                                        x: that.width + 30,
+                                        y: tmpy,
+                                        width: 30,
+                                        height: 10,
+                                        radius: [0, 0],
+                                        color: that.statuses[i],
+                                        lineWidth: 0,
+                                        lineJoin: 'round',
+                                        text: i,
+                                        textAlign: "center"
+                                    },
+                                    draggable: false
+                                }));
+                                tmpy += 50;
+                            }
+                            return tmpg;
+
+
+                        },
+                        render: function () {
+                            this.caculate();
+                            var g1 = new Group();
+                            var groups = [];
+
+                            g1.addChild(new LineShape({
+                                style: {
+                                    xStart: 0,
+                                    yStart: 100,
+                                    xEnd: that.width,
+                                    yEnd: 100,
+                                    strokeColor: "rgb(0,0,0)",
+                                    lineWidth: 0.1,
+                                    lineType: 'dotted'
+                                },
+                                draggable: false
+                            }));
+
+
+
+                            // 添加线和类型名称
+
+                            var tmpi = 0;
+
+                            for (var i in that.indexs) {
+                                groups[tmpi] = new Group();
+                                groups[tmpi].addChild(new TextShape({
+                                    style: {
+                                        x: that.indexs[i].x,
+                                        y: 90,
+                                        color: "black",
+                                        lineWidth: 0.1,
+                                        text: '办公室主任核稿',
+                                        textBaseline: 'top'
+                                    },
+                                    rotation: [0.8, that.indexs[i].x, 90],
+                                    draggable: false
+                                }));
+                                groups[tmpi].addChild(new LineShape({
+                                    style: {
+                                        xStart: that.indexs[i].xStart,
+                                        yStart: 100,
+                                        xEnd: that.indexs[i].xStart,
+                                        yEnd: that.height,
+                                        strokeColor: "rgb(0,0,0)",
+                                        lineWidth: 0.1,
+                                        lineType: 'dotted'
+                                    },
+                                    draggable: false
+                                }));
+
+                                that.zr.addGroup(groups[tmpi]);
+                                tmpi++;
+                            }
+
+
+                            for (var i = 0; i < that.index.length; i++) {
+                                g1.addChild(this.rect(that.index[i]));
+                                if (i != that.index.length - 1) {
+                                    if (that.index[i].x > that.index[i + 1].x)
+                                        g1.addChild(this.markline({
+                                            xStart: that.index[i].x,
+                                            xEnd: that.index[i + 1].x + that.index[i + 1].width,
+                                            yStart: that.index[i + 1].y,
+                                            yEnd: that.index[i + 1].y,
+                                            color: "red"
+                                        }));
+                                    if (that.index[i].x < that.index[i + 1].x)
+                                        g1.addChild(this.markline({
+                                            xStart: that.index[i].x + that.index[i].width,
+                                            xEnd: that.index[i + 1].x,
+                                            yStart: that.index[i + 1].y,
+                                            yEnd: that.index[i + 1].y,
+                                            color: "green"
+                                        }));
+                                }
+                            }
+
+
+
+
+                            that.zr.addGroup(g1);
+                            that.zr.addGroup(this.legend());
+
+                            that.zr.render();
+                            // 文本
+
+
+                        }
+
+
+                    }
+                    this.methods.render();
+
+
+
+
+
+                    //创建坐标模块
+
+                    //创建往返指示模块
+
+
+
+
+                };
+
+
+
+
+                view({
+                    id: "main"
+                });
+
+
+
+            })
+    </script>
+</body>
+
+</html>
