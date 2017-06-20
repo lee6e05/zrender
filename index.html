@@ -20,7 +20,7 @@
         require(
             [
                 "zrender",
-                "zrender/animation/animation",
+                "zrender/animation/Animation",
                 'zrender/shape/Rectangle',
                 'zrender/Group',
                 'zrender/shape/Line',
@@ -103,10 +103,13 @@
                     Object.assign(setting, default_setting);
 
 
+
                     // 初始化zrender
                     this.zr = zrender.init(document.getElementById(setting.id));
                     this.height = this.zr.getHeight();
                     this.width = this.zr.getWidth() - 150;
+
+
 
                     //颜色单位设置
                     this.statuses = {
@@ -123,8 +126,7 @@
 
 
                     this.index = [];
-                    this.indexs = [];
-
+                    this.indexs = []; 
                     var that = this;
 
 
@@ -365,12 +367,7 @@
 
 
                     }
-                    this.methods.render();
-
-
-
-
-
+                    this.methods.render(); 
                     //创建坐标模块
 
                     //创建往返指示模块
